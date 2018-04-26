@@ -27,17 +27,15 @@ def find_cart_id():
     '''
         helper function for finding cart_id of current user. creates one if none exists.
     '''
-    cart = g.session.query(db.Cart).filter(db.Cart.user_id == g.user.id).first()
-    cart_id = -1
+    cart = g.session.query(db.Cart) \
+                .filter(db.Cart.user_id == g.user.id) \
+                .first()
     if not cart:
         cart = db.Cart(user_id=g.user.id)
         g.session.add(cart)
         g.session.commit()
-        cart_id = cart.id
-    else:
-        cart_id = cart.id
-  
-    return cart_id
+    
+    return cart.id
 
 
 def add_get_products_to_cart(cart_id):
@@ -45,7 +43,10 @@ def add_get_products_to_cart(cart_id):
         helper function for adding products to association table - CartProduct - with id=cart_id.
     '''
     for p in g.params.get('products'):
-        p_id = p.get('id', -1)
+        p_id = p.get('id', None)
+        if not p_id:
+            raise ValueError('There is no id supplied')
+
         product = (
                 g.session.query(db.Product)
                 .filter_by(id=int(p_id))
@@ -90,7 +91,9 @@ def reset_cart():
     cart_id = find_cart_id()
 
     #delete existing entries in cart
-    g.session.query(db.CartProduct).filter(db.CartProduct.cart_id == cart_id).delete(synchronize_session=False)
+    g.session.query(db.CartProduct) \
+        .filter(db.CartProduct.cart_id == cart_id) \
+        .delete(synchronize_session=False)
 
     cart_products = add_get_products_to_cart(cart_id)
     return to_json(dict(id=cart_id, products=cart_products))
@@ -104,9 +107,13 @@ def delete_cart():
     cart_id = find_cart_id()
     
     #delete children in CartProduct first
-    g.session.query(db.CartProduct).filter(db.CartProduct.cart_id == cart_id).delete(synchronize_session=False)
+    g.session.query(db.CartProduct) \
+            .filter(db.CartProduct.cart_id == cart_id) \
+            .delete(synchronize_session=False)
     #delete cart 
-    g.session.query(db.Cart).filter(db.Cart.id == cart_id).delete(synchronize_session=False)
+    g.session.query(db.Cart) \
+            .filter(db.Cart.id == cart_id) \
+            .delete(synchronize_session=False)
     g.session.commit()
     return '<no payload>'
 
@@ -122,7 +129,9 @@ def order():
     cart_id = find_cart_id()
 
     #get cart entries
-    cart_products = g.session.query(db.CartProduct).filter(db.CartProduct.cart_id == cart_id).all()
+    cart_products = g.session.query(db.CartProduct) \
+                .filter(db.CartProduct.cart_id == cart_id) \
+                .all()
 
     #if cart is empty raise error
     if not cart_products:
@@ -140,7 +149,9 @@ def order():
         g.session.add(op)
     
     #empty cart of current user
-    g.session.query(db.CartProduct).filter(db.CartProduct.cart_id == cart_id).delete(synchronize_session=False)
+    g.session.query(db.CartProduct) \
+            .filter(db.CartProduct.cart_id == cart_id) \
+            .delete(synchronize_session=False)
 
     #commit and return payload
     g.session.commit()    

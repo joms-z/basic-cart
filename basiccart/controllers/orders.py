@@ -19,7 +19,8 @@ def get_order(order_id):
         .join(db.Product)
         .join(db.Order)
         .filter(db.Order.id==int(order_id))
-        .filter(db.Order.user_id == g.user.id).all()
+        .filter(db.Order.user_id == g.user.id)
+        .all()
     )
    
     if not order:
@@ -37,7 +38,10 @@ def get_orders():
         g.session.query(db.OrderProduct.order_id.label("order_id"), db.OrderProduct.product_id.label("product_id"), db.Product.name.label("name"))
         .select_from(db.OrderProduct)
         .join(db.Product)
-        .order_by(db.OrderProduct.order_id).all()
+        .join(db.Order)
+        .filter(db.Order.user_id == g.user.id)
+        .order_by(db.OrderProduct.order_id)
+        .all()
     )
 
 
