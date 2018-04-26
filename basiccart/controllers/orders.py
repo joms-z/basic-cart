@@ -32,7 +32,7 @@ def get_order(order_id):
 @bp.route('/')
 def get_orders():
     '''
-        get all orders regardless of current user.
+        get all orders for current user.
     '''
     orders = (
         g.session.query(db.OrderProduct.order_id.label("order_id"), db.OrderProduct.product_id.label("product_id"), db.Product.name.label("name"))
