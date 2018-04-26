@@ -33,7 +33,7 @@ def find_cart_id():
     if not cart:
         cart = db.Cart(user_id=g.user.id)
         g.session.add(cart)
-        g.session.commit()
+        g.session.flush()
     
     return cart.id
 
@@ -58,7 +58,7 @@ def add_get_products_to_cart(cart_id):
         cp = db.CartProduct(cart_id=cart_id, product_id=int(p_id))
         g.session.add(cp)
 
-    g.session.commit()
+    g.session.flush()
 
     cart = (
         g.session.query(db.CartProduct.product_id.label("product_id"), db.Product.name.label("name"))
@@ -114,7 +114,7 @@ def delete_cart():
     g.session.query(db.Cart) \
             .filter(db.Cart.id == cart_id) \
             .delete(synchronize_session=False)
-    g.session.commit()
+    g.session.flush()
     return '<no payload>'
 
 
@@ -154,7 +154,7 @@ def order():
             .delete(synchronize_session=False)
 
     #commit and return payload
-    g.session.commit()    
+    g.session.flush()    
     order = (
         g.session.query(db.OrderProduct.product_id.label("product_id"), db.Product.name.label("name"))
         .select_from(db.OrderProduct)
